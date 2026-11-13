@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rift Draft - Sorteador de Times de League of Legends</title>
+  
+  <!-- Fontes inspiradas em League of Legends (Cinzel / Rajdhani) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Fundo animado Hextech -->
+  <div class="hextech-bg">
+    <div class="particles-layer" id="particles"></div>
+    <div class="ambient-glow"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header LoL Style -->
+    <header class="lol-header">
+      <div class="logo-wrapper">
+        <div class="crest-icon">
+          <svg viewBox="0 0 100 100" fill="none" class="crest-svg">
+            <path d="M50 5 L85 25 L85 65 L50 95 L15 65 L15 25 Z" stroke="url(#goldGrad)" stroke-width="3" fill="rgba(10, 20, 40, 0.75)" />
+            <path d="M50 15 L75 30 L75 60 L50 82 L25 60 L25 30 Z" stroke="url(#cyanGrad)" stroke-width="1.5" fill="none" opacity="0.8" />
+            <path d="M50 30 L50 70 M30 50 L70 50" stroke="url(#goldGrad)" stroke-width="2" />
+            <circle cx="50" cy="50" r="8" fill="url(#cyanGrad)" filter="drop-shadow(0 0 6px #0ac8b9)" />
+            <defs>
+              <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f0e6d2" />
+                <stop offset="50%" stop-color="#c8aa6e" />
+                <stop offset="100%" stop-color="#785a28" />
+              </linearGradient>
+              <linearGradient id="cyanGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#00f0ff" />
+                <stop offset="100%" stop-color="#0ac8b9" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="title-group">
+          <span class="subtitle">SUMMONER'S RIFT • TEAM DRAFT</span>
+          <h1 class="main-title">SORTEADOR DE TIMES</h1>
+          <div class="title-underline"></div>
+        </div>
+      </div>
+      
+      <!-- Controles de Áudio e Acessibilidade -->
+      <div class="header-actions">
+        <button id="audioToggleBtn" class="icon-btn" title="Ativar/Desativar Efeitos Sonoros">
+          <span class="icon" id="audioIcon">🔊</span>
+          <span class="icon-label">EFEITOS DE SOM</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Barra de Configurações do Sorteio -->
+    <section class="config-bar lol-panel">
+      <!-- Seletor de Modo de Jogo -->
+      <div class="config-item">
+        <label class="config-label">MODO DE JOGO</label>
+        <div class="segmented-control" id="gameModeControl">
+          <button class="seg-btn active" data-mode="5x5">
+            <span class="mode-text">5 vs 5</span>
+            <span class="mode-sub">10 Invocadores</span>
+          </button>
+          <button class="seg-btn" data-mode="4x4">
+            <span class="mode-text">4 vs 4</span>
+            <span class="mode-sub">8 Invocadores</span>
+          </button>
+          <button class="seg-btn" data-mode="custom">
+            <span class="mode-text">Livre</span>
+            <span class="mode-sub">Qualquer Qtde</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Equilíbrio por Elo / Nível (Destaque Principal) -->
+      <div class="config-item config-item-highlight">
+        <label class="config-label">SORTEIO POR ELO</label>
+        <div class="toggle-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="balanceEloCheck" checked>
+            <span class="slider"></span>
+          </label>
+          <span class="switch-label" id="eloCheckLabel">⚖️ Equilibrar Força dos Times</span>
+        </div>
+      </div>
+
+      <!-- Distribuição de Lanes / Rotas -->
+      <div class="config-item">
+        <label class="config-label">DISTRIBUIÇÃO DE ROTAS</label>
+        <div class="toggle-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="assignRolesCheck" checked>
+            <span class="slider"></span>
+          </label>
+          <span class="switch-label" id="roleCheckLabel">Sortear Rotas (Top, Jg, Mid, Adc, Sup)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conteúdo Principal: Entrada e Cadastro de Amigos -->
+    <main class="main-content">
+      <!-- Painel Esquerdo: Gerenciamento e Cadastro da Lista de Amigos -->
+      <div class="players-column">
+        <div class="lol-panel players-panel">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <h2 class="panel-title">CADASTRO DE AMIGOS</h2>
+              <span class="badge" id="playerCountBadge">0 / 10 Selecionados</span>
+            </div>
+            <div class="panel-header-buttons">
+              <button class="btn-sm btn-secondary" id="btnFillDemo" title="Preenche com 10 invocadores para teste rápido">
+                ⚡ Demo
+              </button>
+              <button class="btn-sm btn-secondary" id="btnOpenBulkModal" title="Colar vários nomes de uma vez">
+                📋 Em Massa
+              </button>
+              <button class="btn-sm btn-danger" id="btnClearAll" title="Remover todos">
+                🗑️ Limpar
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulário para Cadastrar Amigo com Nick e Elo -->
+          <form id="addPlayerForm" class="add-player-form" onsubmit="return false;">
+            <div class="input-row">
+              <div class="input-group flex-1">
+                <input 
+                  type="text" 
+                  id="playerNameInput" 
+                  placeholder="Nome / Nick do Amigo" 
+                  maxlength="24"
+                  autocomplete="off"
+                />
+              </div>
+
+              <!-- Seleção Completa de Elo do LoL -->
+              <div class="input-group elo-select-group">
+                <select id="playerTierInput" title="Selecione o Elo do amigo">
+                  <option value="1">🪙 Ferro</option>
+                  <option value="2">🟤 Bronze</option>
+                  <option value="3">⚪ Prata</option>
+                  <option value="4" selected>🟡 Ouro</option>
+                  <option value="5">🔷 Platina</option>
+                  <option value="6">🟢 Esmeralda</option>
+                  <option value="7">💠 Diamante</option>
+                  <option value="8">🔮 Mestre</option>
+                  <option value="9">🔴 Grão-Mestre</option>
+                  <option value="10">👑 Desafiante</option>
+                </select>
+              </div>
+
+              <!-- Botão Adicionar -->
+              <button type="button" id="btnAddPlayer" class="lol-btn btn-primary">
+                <span>+ CADASTRAR</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Barra de Ações Rápidas de Seleção -->
+          <div class="roster-quick-bar">
+            <span class="roster-tip">Marque quem vai jogar hoje:</span>
+            <div class="roster-btns">
+              <button type="button" class="btn-xs" id="btnSelectAll">Marcar Todos</button>
+              <button type="button" class="btn-xs" id="btnSelectNeeded">Marcar Necessários</button>
+              <button type="button" class="btn-xs" id="btnDeselectAll">Desmarcar</button>
+            </div>
+          </div>
+
+          <!-- Dica e Status de Invocadores Selecionados -->
+          <div class="status-alert" id="statusAlert">
+            <span class="status-icon">⚠️</span>
+            <span class="status-text" id="statusAlertText">Cadastre e selecione 10 amigos para a partida 5x5.</span>
+          </div>
+
+          <!-- Lista de Amigos Cadastrados -->
+          <div class="player-list-container">
+            <ul class="player-list" id="playerList">
+              <!-- Renderizado via JavaScript com Checkboxes e Seletor Inline de Elo -->
+            </ul>
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon">⚔️</div>
+              <p>Nenhum amigo cadastrado ainda.</p>
+              <small>Cadastre os nomes acima ou clique em <strong>"Demo"</strong> para testar!</small>
+            </div>
+          </div>
+
+          <!-- Botão Gigante de Sortear -->
+          <div class="action-footer">
+            <button id="btnRollTeams" class="lol-btn btn-cta" disabled>
+              <span class="btn-bg-glow"></span>
+              <span class="btn-content">
+                <span class="cta-icon">⚡</span>
+                <span class="cta-text" id="ctaRollText">SORTEAR POR ELO</span>
+                <span class="cta-icon">⚡</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel Direito: Resultados das Equipes (Lado Azul vs Lado Vermelho) -->
+      <div class="results-column">
+        <!-- Card que aparece antes de sortear -->
+        <div class="awaiting-draft-state" id="awaitingDraftState">
+          <div class="runeterra-circle">
+            <div class="rune-ring inner"></div>
+            <div class="rune-ring middle"></div>
+            <div class="rune-ring outer"></div>
+            <div class="center-swords">⚔️</div>
+          </div>
+          <h3>AGUARDANDO O DRAFT</h3>
+          <p>Cadastre seus amigos, defina os elos e inicie o sorteio equilibrado para Summoner's Rift.</p>
+        </div>
+
+        <!-- Tela de Animação de Sorteio (Shuffling / LoL Selection) -->
+        <div class="draft-animating-overlay hidden" id="draftAnimation">
+          <div class="draft-anim-content">
+            <div class="nexus-core"></div>
+            <h2 class="anim-heading">SINTONIZANDO HEX-TECH...</h2>
+            <div class="shuffle-names-box" id="shuffleNamesBox">
+              <span class="shuffling-name">Calculando Equilíbrio de Elos...</span>
+            </div>
+            <div class="anim-progress">
+              <div class="anim-bar" id="animBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Container do Resultado dos Times -->
+        <div class="teams-container hidden" id="teamsContainer">
+          <div class="teams-header-bar">
+            <div class="draft-title-badge">⚔️ CONFRONTO DEFINIDO</div>
+            <div class="balance-summary-badge" id="balanceSummaryBadge">
+              ⚖️ Equilíbrio de Elos: Perfeito
+            </div>
+            <div class="teams-quick-actions">
+              <button class="btn-sm btn-secondary" id="btnReroll" title="Sortear novamente">
+                🔄 Reembaralhar
+              </button>
+              <button class="btn-sm btn-gold" id="btnCopyDiscord" title="Copiar para o Discord ou WhatsApp">
+                📋 Copiar p/ Discord
+              </button>
+            </div>
+          </div>
+
+          <!-- Arena VS: Lado Azul e Lado Vermelho -->
+          <div class="battlefield-grid">
+            <!-- TIME AZUL -->
+            <div class="team-card team-blue">
+              <div class="team-header">
+                <div class="team-side-indicator">
+                  <span class="team-dot"></span>
+                  <span class="team-title">LADO AZUL</span>
+                </div>
+                <div class="team-meta" id="blueTeamMeta">
+                  <span class="team-power-tag" id="bluePowerTag">MMR Total: 0</span>
+                </div>
+              </div>
+
+              <div class="team-banner-img blue-banner"></div>
+
+              <div class="team-members" id="blueTeamList">
+                <!-- Preenchido via JavaScript -->
+              </div>
+            </div>
+
+            <!-- EMBLEMA VS NO MEIO -->
+            <div class="vs-divider">
+              <div class="vs-line"></div>
+              <div class="vs-badge">
+                <span>VS</span>
+              </div>
+              <div class="vs-line"></div>
+            </div>
+
+            <!-- TIME VERMELHO -->
+            <div class="team-card team-red">
+              <div class="team-header">
+                <div class="team-side-indicator">
+                  <span class="team-dot"></span>
+                  <span class="team-title">LADO VERMELHO</span>
+                </div>
+                <div class="team-meta" id="redTeamMeta">
+                  <span class="team-power-tag" id="redPowerTag">MMR Total: 0</span>
+                </div>
+              </div>
+
+              <div class="team-banner-img red-banner"></div>
+
+              <div class="team-members" id="redTeamList">
+                <!-- Preenchido via JavaScript -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Banco de Reservas (se sobrarem jogadores) -->
+          <div class="bench-panel hidden" id="benchPanel">
+            <h4 class="bench-title">🛋️ BANCO DE RESERVAS / ESPECTADORES</h4>
+            <div class="bench-list" id="benchList"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="lol-footer">
+      <p>Desenvolvido para partidas com amigos no League of Legends • Repositório: <a href="https://github.com/Gaicos/sorteadorde-time" target="_blank" rel="noopener">Gaicos/sorteadorde-time</a></p>
+    </footer>
+  </div>
+
+  <!-- MODAL: Adicionar Invocadores em Massa (Colar lista do Discord / Whats) -->
+  <div class="modal-backdrop hidden" id="bulkModal">
+    <div class="modal-card lol-panel">
+      <div class="modal-header">
+        <h3 class="modal-title">CADASTRO EM MASSA</h3>
+        <button class="modal-close-btn" id="btnCloseBulkModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Cole a lista de amigos direto do Discord, WhatsApp ou bloco de notas. 
+          Pode separar por linhas, vírgulas ou ponto-e-vírgula!
+        </p>
+        <textarea 
+          id="bulkInputText" 
+          placeholder="Exemplo:&#10;Faker&#10;Deft&#10;Showmaker&#10;Keria&#10;Gumayusi&#10;Chovy&#10;Canyon&#10;Zeus&#10;Oner&#10;BeryL"
+          rows="8"
+        ></textarea>
+        <div class="bulk-options">
+          <label>Elo padrão para os novos:</label>
+          <select id="bulkDefaultElo">
+            <option value="1">🪙 Ferro</option>
+            <option value="2">🟤 Bronze</option>
+            <option value="3">⚪ Prata</option>
+            <option value="4" selected>🟡 Ouro</option>
+            <option value="5">🔷 Platina</option>
+            <option value="6">🟢 Esmeralda</option>
+            <option value="7">💠 Diamante</option>
+            <option value="8">🔮 Mestre</option>
+            <option value="9">🔴 Grão-Mestre</option>
+            <option value="10">👑 Desafiante</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm btn-secondary" id="btnCancelBulkModal">Cancelar</button>
+        <button class="lol-btn btn-primary" id="btnApplyBulkModal">
+          <span>IMPORTAR AMIGOS</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-container" id="toast">
+    <span class="toast-icon">ℹ️</span>
+    <span class="toast-msg" id="toastMsg">Notificação</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
