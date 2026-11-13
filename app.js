@@ -35,21 +35,6 @@ const ROLES_4V4 = [
   { id: 'bot', name: 'BOT', label: 'Inferior', icon: '🏹' }
 ];
 
-const DEMO_FRIENDS = [
-  { name: 'Faker', tier: 10, selected: true },
-  { name: 'Chovy', tier: 10, selected: true },
-  { name: 'Showmaker', tier: 8, selected: true },
-  { name: 'Caps', tier: 8, selected: true },
-  { name: 'Gumayusi', tier: 7, selected: true },
-  { name: 'Deft', tier: 7, selected: true },
-  { name: 'Keria', tier: 8, selected: true },
-  { name: 'BeryL', tier: 6, selected: true },
-  { name: 'Zeus', tier: 7, selected: true },
-  { name: 'Canyon', tier: 9, selected: true },
-  { name: 'Oner', tier: 7, selected: false },
-  { name: 'Ruler', tier: 8, selected: false }
-];
-
 const state = {
   friends: [],
   gameMode: '5x5', // '5x5' | '4x4' | 'custom'
@@ -167,12 +152,20 @@ function loadStoredData() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
-        state.friends = parsed.map(p => ({
-          id: p.id || (Date.now() + Math.random().toString(36).substr(2, 5)),
-          name: p.name,
-          tier: p.tier || 4,
-          selected: p.selected !== undefined ? p.selected : true
-        }));
+        // Se continha apenas os jogadores profissionais de demonstração antigos, limpa por padrão
+        const isOldDemo = parsed.some(p => p.name === 'Faker' || p.name === 'Chovy' || p.name === 'Showmaker');
+        if (isOldDemo) {
+          state.friends = [];
+          localStorage.removeItem('rift_draft_friends');
+          localStorage.removeItem('rift_draft_players');
+        } else {
+          state.friends = parsed.map(p => ({
+            id: p.id || (Date.now() + Math.random().toString(36).substr(2, 5)),
+            name: p.name,
+            tier: p.tier || 4,
+            selected: p.selected !== undefined ? p.selected : true
+          }));
+        }
       }
     }
     const soundPref = localStorage.getItem('rift_draft_sound');
@@ -208,7 +201,6 @@ const dom = {
   statusAlertText: document.getElementById('statusAlertText'),
   btnRollTeams: document.getElementById('btnRollTeams'),
   ctaRollText: document.getElementById('ctaRollText'),
-  btnFillDemo: document.getElementById('btnFillDemo'),
   btnOpenBulkModal: document.getElementById('btnOpenBulkModal'),
   btnClearAll: document.getElementById('btnClearAll'),
   gameModeControl: document.getElementById('gameModeControl'),
@@ -347,20 +339,6 @@ function clearAllFriends() {
     sfx.playClick();
     showToast('Lista de amigos limpa!');
   }
-}
-
-function fillDemoFriends() {
-  state.friends = DEMO_FRIENDS.map(f => ({
-    id: Date.now() + Math.random().toString(36).substr(2, 5),
-    name: f.name,
-    tier: f.tier,
-    selected: f.selected
-  }));
-  saveStoredData();
-  renderPlayerList();
-  updateStatus();
-  sfx.playClick();
-  showToast('Invocadores de demonstração carregados!');
 }
 
 function renderPlayerList() {
@@ -855,7 +833,6 @@ function attachEvents() {
   dom.btnDeselectAll.addEventListener('click', () => selectAllFriends(false));
   dom.btnSelectNeeded.addEventListener('click', selectNeededFriends);
 
-  dom.btnFillDemo.addEventListener('click', fillDemoFriends);
   dom.btnClearAll.addEventListener('click', clearAllFriends);
 
   // Modos de Jogo (Segmented Buttons)
@@ -948,10 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.audioToggleBtn.querySelector('.icon-label').textContent = 'SOM MUDO';
   }
 
-  if (state.friends.length === 0) {
-    fillDemoFriends();
-  } else {
-    renderPlayerList();
-    updateStatus();
-  }
+  // Inicializa com a lista limpa para o usuário cadastrar os amigos reais
+  renderPlayerList();
+  updateStatus();
 });
